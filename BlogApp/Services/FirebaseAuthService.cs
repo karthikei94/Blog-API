@@ -1,8 +1,7 @@
 ﻿using Firebase.Auth;
 
-namespace BlogApp
+namespace BlogApp.Services
 {
-
     public class FirebaseAuthService(FirebaseAuthClient firebaseAuthClient) : IFirebaseAuthService
     {
         private readonly IFirebaseAuthClient firebaseAuthClient = firebaseAuthClient;

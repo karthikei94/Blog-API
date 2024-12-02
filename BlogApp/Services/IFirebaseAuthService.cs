@@ -1,4 +1,4 @@
-﻿namespace BlogApp
+﻿namespace BlogApp.Services
 {
     public interface IFirebaseAuthService
     {

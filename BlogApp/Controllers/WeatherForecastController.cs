@@ -1,9 +1,11 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BlogApp.Controllers
+namespace BlogApp.Controllers.v1
 {
+    [ApiVersion("1.0")]
+    [Route("api/v1.0/[controller]")]
     [ApiController]
-    [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
@@ -18,7 +20,9 @@ namespace BlogApp.Controllers
             _logger = logger;
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet(Name = "GetWeatherForecast")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<WeatherForecast> Get()
         {
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
