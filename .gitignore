@@ -76,6 +76,7 @@ npm-debug.log
 
 # VS Code directories
 .vscode/
+.vs/
 
 # JetBrains Rider
 .idea/
