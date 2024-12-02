@@ -45,4 +45,37 @@ bld/
 
 # NuGet Packages
 *.nupkg
-# The packages folder can be ignored because of a dependency manager should be used for restoring them (unless this is the only copy
+# The packages folder can be ignored because of a dependency manager should be used for restoring them (unless this is the only copy of the source)
+packages
+# Uncomment if necessary however generally it will be restored by build tool
+#!packages
+
+# Microsoft Azure Web App publish settings. 
+# This can be used to create and update the web app directly from Visual Studio
+PublishProfiles/
+
+# Mac desktop database files
+.DS_Store
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Windows 8 store app package directories
+AppPackages/
+
+# Node.js dependencies
+node_modules/
+npm-debug.log
+
+# VS Code directories
+.vscode/
+
+# JetBrains Rider
+.idea/
