@@ -4,13 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace BlogApp.Controllers.v2
 {
     [ApiVersion("2.0")]
-    [Route("api/v2.0/[controller]")]
+    [Route("api/v{version:apiVersion}/[Controller]")]
     [ApiController]
     public class SampleController : ControllerBase
     {
 
-        [MapToApiVersion("2.0")]
         [HttpGet]
+        [MapToApiVersion("2.0")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult Get()
         {
