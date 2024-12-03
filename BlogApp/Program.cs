@@ -5,6 +5,7 @@ using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
+using Google.Cloud.Storage.V1;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
 
@@ -12,6 +13,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 var credPath = builder.Configuration.GetValue<string>("FirebaseCredentialsPath");
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credPath);
+
 builder.Services.AddSingleton(FirebaseApp.Create(new AppOptions()
 {
     Credential = GoogleCredential.FromFile(credPath),
@@ -28,6 +31,8 @@ builder.Services.AddScoped(typeof(IMongoClient), _ =>
 });
 builder.Services.AddScoped<IBlogPostService, BlogPostService>();
 builder.Services.AddScoped<IPostCommentService, PostCommentService>();
+
+builder.Services.AddSingleton<IFileUploadService>(provider => new FileUploadService(StorageClient.Create(), provider.GetRequiredService<IConfiguration>()));
 // builder.Services.AddSingleton(_ => new FirestoreProvider(
 //     new FirestoreDbBuilder 
 //     { 

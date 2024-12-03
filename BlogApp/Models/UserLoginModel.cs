@@ -1,3 +1,4 @@
+namespace BlogApp.Models;
 public class UserLoginModel
 {
     public string UserName { get; set; }
