@@ -27,6 +27,7 @@ builder.Services.AddScoped(typeof(IMongoClient), _ =>
     return new MongoClient(builder.Configuration.GetValue<string>("BlogPostsDatabase:ConnectionString"));
 });
 builder.Services.AddScoped<IBlogPostService, BlogPostService>();
+builder.Services.AddScoped<IPostCommentService, PostCommentService>();
 // builder.Services.AddSingleton(_ => new FirestoreProvider(
 //     new FirestoreDbBuilder 
 //     { 

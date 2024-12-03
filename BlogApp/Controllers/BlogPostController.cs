@@ -11,10 +11,20 @@ public class BlogPostController(IBlogPostService blogPostService) : ControllerBa
 
     [HttpGet]
     [MapToApiVersion("2.0")]
+    [Route("GetAll")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Get()
     {
         var result = await blogPostService.GetAllAsync();
+        return Ok(result);
+    }
+
+    [HttpGet]
+    [MapToApiVersion("2.0")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPagedResult([FromQuery] int page, [FromQuery] int pageSize, [FromQuery] int totalRec)
+    {
+        var result = await blogPostService.GetPagedResultsAsync(page, pageSize);
         return Ok(result);
     }
 
@@ -50,6 +60,15 @@ public class BlogPostController(IBlogPostService blogPostService) : ControllerBa
     public async Task<IActionResult> Put(int id)
     {
         await blogPostService.DeleteAsync(id);
+        return Ok();
+    }
+    
+    [HttpPost("LikePost/{id}")]
+    [MapToApiVersion("2.0")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> LikePost(int id)
+    {
+        await blogPostService.LikePost(id);
         return Ok();
     }
 }

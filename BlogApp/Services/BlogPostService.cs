@@ -25,6 +25,16 @@ namespace BlogApp.Services
             var filter = Builders<BlogPost>.Filter.Empty;
             return await _collection.Find(filter).ToListAsync();
         }
+        public async Task<PagedResult<BlogPost>> GetPagedResultsAsync(int page, int pageSize)
+        {
+            var filter = Builders<BlogPost>.Filter.Empty;
+            var result = new PagedResult<BlogPost>
+            {
+                TotalRec = await _collection.Find(filter).CountDocumentsAsync(),
+                Records = await _collection.Find(filter).Skip(pageSize * (page > 1 ? page - 1 : 0)).Limit(pageSize).ToListAsync()
+            };
+            return result;
+        }
         public async Task<BlogPost> GetAsync(int id)
         {
             var filter = Builders<BlogPost>.Filter.Eq(d => d.Id, id);
@@ -36,7 +46,16 @@ namespace BlogApp.Services
         public async Task DeleteAsync(int id) =>
             await _collection.DeleteOneAsync(x => x.Id == id);
 
+        public async Task LikePost(int id)
+        {
+            var filter = Builders<BlogPost>.Filter.Eq(d => d.Id, id);
+            var update = Builders<BlogPost>.Update.Inc(d => d.Likes, 1);
+            await _collection.FindOneAndUpdateAsync(filter, update);
+        }
+
     }
 }
+
+
 
 

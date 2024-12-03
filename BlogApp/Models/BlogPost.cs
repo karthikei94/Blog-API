@@ -16,8 +16,10 @@ public class BlogPost
     public int Views { get; set; }
 }
 
-public class Comments
+public class PostComments
 {
+    public required int Id { get; set; }
+    public required int PostId {get;set;}
     public required string Value { get; set; }
     public required string CreatedBy { get; set; }
     public DateTime CreatedDate { get; set; }
@@ -46,4 +48,10 @@ public class Users
     public string LastName { get; set; }
     public required string DisplayName { get; set; }
     public bool IsAuthor { get; set; }
+}
+
+public class PagedResult<T> where T : class
+{
+    public long TotalRec { get; set; } = 0;
+    public List<T> Records { get; set; } = [];
 }
