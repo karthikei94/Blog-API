@@ -18,7 +18,7 @@ public class BlogPost
 
 public class PostComments
 {
-    public required int Id { get; set; }
+    public int Id { get; set; }
     public required int PostId {get;set;}
     public required string Value { get; set; }
     public required string CreatedBy { get; set; }
