@@ -8,6 +8,12 @@ using Google.Cloud.Firestore;
 using Google.Cloud.Storage.V1;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Authentication;
+using BlogApp.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +28,7 @@ builder.Services.AddSingleton(FirebaseApp.Create(new AppOptions()
 );
 
 // builder.Services.AddSingleton<IFirebaseAuthClient,FirebaseAuthClient>();
-builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
+builder.Services.AddSingleton<BlogApp.Services.IAuthenticationService, BlogApp.Services.AuthenticationService>();
 builder.Services.Configure<BlogPostsDatabaseSettings>(
         builder.Configuration.GetSection("BlogPostsDatabase"));
 builder.Services.AddScoped(typeof(IMongoClient), _ =>
@@ -31,6 +37,7 @@ builder.Services.AddScoped(typeof(IMongoClient), _ =>
 });
 builder.Services.AddScoped<IBlogPostService, BlogPostService>();
 builder.Services.AddScoped<IPostCommentService, PostCommentService>();
+builder.Services.AddScoped<IUserService,UserService>();
 
 builder.Services.AddSingleton<IFileUploadService>(provider => new FileUploadService(StorageClient.Create(), provider.GetRequiredService<IConfiguration>()));
 // builder.Services.AddSingleton(_ => new FirestoreProvider(
@@ -43,7 +50,43 @@ builder.Services.AddSingleton<IFileUploadService>(provider => new FileUploadServ
 
 // Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credPath);
 // builder.Services.AddSingleton(FirebaseApp.Create());
+// var firebaseProjectName = builder.Configuration.GetValue<string>("Firebase:ProjectId");
+// builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+//         .AddJwtBearer(options =>
+//         {
+//             options.Authority = $"https://securetoken.google.com/{firebaseProjectName}/";
+//             options.TokenValidationParameters = new TokenValidationParameters
+//             {
+//                 ValidateIssuer = true,
+//                 ValidIssuer = $"https://securetoken.google.com/{firebaseProjectName}/",
+//                 ValidateAudience = true,
+//                 ValidAudience = firebaseProjectName,
+//                 ValidateLifetime = true,
+//                 // ValidateIssuerSigningKey = true,
+//                 // IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your_secret_key"))
+//             };
+//         });
+        
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddScheme<AuthenticationSchemeOptions,FirebaseAuthenticationHandler>(JwtBearerDefaults.AuthenticationScheme, (action) => {
+        });
 
+// var key = System.Text.Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Firebase:Key")!);
+//     builder.Services.AddAuthentication(
+//         auth => {
+//         auth.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+//         auth.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;})
+//     .AddJwtBearer(options => {
+//         options.RequireHttpsMetadata = false;
+//         options.IncludeErrorDetails = true;
+//         options.TokenValidationParameters = new TokenValidationParameters {
+//             ValidateIssuerSigningKey = true,
+//             IssuerSigningKey = new SymmetricSecurityKey(key),
+//             ValidateIssuer = false,
+//             ValidateAudience = false,
+//             ValidateLifetime = true
+//         };
+//    });
 
 builder.Services.AddControllers();
 
@@ -85,6 +128,9 @@ if (app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection();
 
+app.UseAuthentication();
+// app.UseFirebaseAuthentication("https://securetoken.google.com/MYPROJECTNAME", "MYPROJECTNAME");
+// app.UseJwtAuthentication()
 app.UseAuthorization();
 app.UseCors();
 

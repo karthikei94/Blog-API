@@ -20,7 +20,7 @@ public class BlogPostCommentController(IPostCommentService commentService) : Con
     [HttpGet("GetByPostId/{id}")]
     [MapToApiVersion("2.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Get(int id)
+    public async Task<IActionResult> Get(string id)
     {
         var result = await commentService.GetByPostAsync(id);
         return Ok(result);
@@ -32,14 +32,14 @@ public class BlogPostCommentController(IPostCommentService commentService) : Con
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Post(PostComments comment)
     {
-        await commentService.AddComment(comment);
-        return Ok();
+        var result = await commentService.AddComment(comment);
+        return Ok(result);
     }
 
     [HttpPost("LikeComment/{id}")]
     [MapToApiVersion("2.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Post(int id)
+    public async Task<IActionResult> Post(string id)
     {
         await commentService.LikeComment(id);
         return Ok();

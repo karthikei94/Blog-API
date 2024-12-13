@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 [ApiVersion("2.0")]
 [ApiController]
 [Route("api/v{version:apiVersion}/[Controller]")]
-public class UsersController(IAuthenticationService authService) : ControllerBase
+public class UsersController(IUserService userService) : ControllerBase
 {
 
     // [HttpPost("Login")]
@@ -16,10 +16,18 @@ public class UsersController(IAuthenticationService authService) : ControllerBas
     //     return Ok(result);
     // }
 
+    // [HttpPost("SignUp")]
+    // public async Task<IActionResult> SignUp([FromBody] UserSignupModel userModel)
+    // {
+    //     var result = await authService.SignUp(userModel.DisplayName, userModel.UserName, userModel.Password);
+    //     return Ok(new { Uid = result });
+    // }
+
     [HttpPost("SignUp")]
     public async Task<IActionResult> SignUp([FromBody] UserSignupModel userModel)
     {
-        var result = await authService.SignUp(userModel.DisplayName, userModel.UserName, userModel.Password);
-        return Ok(new { Uid = result });
+        var result = await userService.CreateUser(userModel);
+        return CreatedAtAction("SignUp", result);
     }
+    
 }

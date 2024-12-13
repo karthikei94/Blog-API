@@ -1,8 +1,14 @@
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
 namespace BlogApp.Models;
 
 public class Users
 {
-    public int Id { get; set; }
+    [BsonId]
+    [BsonRepresentation(BsonType.ObjectId)]
+    public string? Id { get; set; }
+    public string UserId {get;set;}
     public required string EmailId { get; set; }
     public string PhoneNumber { get; set; }
     public required string FirstName { get; set; }

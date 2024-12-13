@@ -1,5 +1,6 @@
 using BlogApp.Models;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace BlogApp.Services
@@ -16,8 +17,12 @@ namespace BlogApp.Services
             _collection = mongoDatabase.GetCollection<BlogPost>(Constants.CollectionNames.BlogPost);
         }
 
-        public async Task CreateBlogPost(BlogPost newPost) =>
+        public async Task CreateBlogPost(BlogPost newPost, string userId)
+        {
+            newPost.CreatedBy = userId;
+            newPost.CreatedDate = DateTime.Now;
             await _collection.InsertOneAsync(newPost);
+        }
 
 
         public async Task<List<BlogPost>> GetAllAsync()
@@ -25,9 +30,13 @@ namespace BlogApp.Services
             var filter = Builders<BlogPost>.Filter.Empty;
             return await _collection.Find(filter).ToListAsync();
         }
-        public async Task<PagedResult<BlogPost>> GetPagedResultsAsync(int page, int pageSize)
+        public async Task<PagedResult<BlogPost>> GetPagedResultsAsync(int page, int pageSize, string loggedInUserId, bool filterCreatedBy = false)
         {
-            var filter = Builders<BlogPost>.Filter.Empty;
+            var builder = Builders<BlogPost>.Filter;
+            var filter = !filterCreatedBy ?
+                            builder.Where(x => x.Draft == false && x.PublicationDate != null) :
+                            builder.Empty & builder.Where(x => x.CreatedBy == loggedInUserId);
+
             var result = new PagedResult<BlogPost>
             {
                 TotalRec = await _collection.Find(filter).CountDocumentsAsync(),
@@ -35,20 +44,30 @@ namespace BlogApp.Services
             };
             return result;
         }
-        public async Task<BlogPost> GetAsync(int id)
+        public async Task<BlogPost> GetAsync(string id)
         {
-            var filter = Builders<BlogPost>.Filter.Eq(d => d.Id, id);
+            ObjectId.TryParse(id, out ObjectId objectId);
+            var filter = Builders<BlogPost>.Filter.Eq("_id", objectId);
             return await _collection.Find(filter).FirstOrDefaultAsync();
         }
-        public async Task UpdateAsync(int id, BlogPost post) =>
-            await _collection.ReplaceOneAsync(x => x.Id == id, post);
-
-        public async Task DeleteAsync(int id) =>
-            await _collection.DeleteOneAsync(x => x.Id == id);
-
-        public async Task LikePost(int id)
+        public async Task UpdateAsync(string id, BlogPost post)
         {
-            var filter = Builders<BlogPost>.Filter.Eq(d => d.Id, id);
+            ObjectId.TryParse(id, out ObjectId objectId);
+            var filter = Builders<BlogPost>.Filter.Eq("_id", objectId);
+            await _collection.ReplaceOneAsync(filter, post);
+        }
+
+        public async Task DeleteAsync(string id)
+        {
+            ObjectId.TryParse(id, out ObjectId objectId);
+            var filter = Builders<BlogPost>.Filter.Eq("_id", objectId);
+            await _collection.DeleteOneAsync(filter);
+        }
+
+        public async Task LikePost(string id)
+        {
+            ObjectId.TryParse(id, out ObjectId objectId);
+            var filter = Builders<BlogPost>.Filter.Eq("_id", objectId);
             var update = Builders<BlogPost>.Update.Inc(d => d.Likes, 1);
             await _collection.FindOneAndUpdateAsync(filter, update);
         }

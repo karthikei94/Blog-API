@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using BlogApp.Models;
 using BlogApp.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -12,6 +13,7 @@ public class BlogPostController(IBlogPostService blogPostService) : ControllerBa
     [HttpGet]
     [MapToApiVersion("2.0")]
     [Route("GetAll")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Get()
     {
@@ -21,17 +23,20 @@ public class BlogPostController(IBlogPostService blogPostService) : ControllerBa
 
     [HttpGet]
     [MapToApiVersion("2.0")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetPagedResult([FromQuery] int page, [FromQuery] int pageSize, [FromQuery] int totalRec)
+    public async Task<IActionResult> GetPagedResult([FromQuery] int page, [FromQuery] int pageSize, [FromQuery] bool createdByMe)
     {
-        var result = await blogPostService.GetPagedResultsAsync(page, pageSize);
+        var user = HttpContext.User.Claims.FirstOrDefault(x => x.Type == "user_id")?.Value;
+        var result = await blogPostService.GetPagedResultsAsync(page, pageSize, user ?? string.Empty, createdByMe);
         return Ok(result);
     }
 
     [HttpGet("{id}")]
     [MapToApiVersion("2.0")]
+    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Get(int id)
+    public async Task<IActionResult> Get(string id)
     {
         var result = await blogPostService.GetAsync(id);
         return Ok(result);
@@ -42,13 +47,14 @@ public class BlogPostController(IBlogPostService blogPostService) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Post(BlogPost blogPost)
     {
-        await blogPostService.CreateBlogPost(blogPost);
+        var userId = HttpContext.User.Claims.FirstOrDefault(x => x.Type == "user_id")?.Value;
+        await blogPostService.CreateBlogPost(blogPost, userId);
         return Ok();
     }
     [HttpPut("{id}")]
     [MapToApiVersion("2.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Put(int id, BlogPost blogPost)
+    public async Task<IActionResult> Put(string id, BlogPost blogPost)
     {
         await blogPostService.UpdateAsync(id, blogPost);
         return Ok();
@@ -57,16 +63,16 @@ public class BlogPostController(IBlogPostService blogPostService) : ControllerBa
     [HttpDelete("{id}")]
     [MapToApiVersion("2.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Put(int id)
+    public async Task<IActionResult> Put(string id)
     {
         await blogPostService.DeleteAsync(id);
         return Ok();
     }
-    
+
     [HttpPost("LikePost/{id}")]
     [MapToApiVersion("2.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> LikePost(int id)
+    public async Task<IActionResult> LikePost(string id)
     {
         await blogPostService.LikePost(id);
         return Ok();

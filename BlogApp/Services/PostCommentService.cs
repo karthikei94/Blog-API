@@ -1,6 +1,7 @@
 using System.Text.Json;
 using BlogApp.Models;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace BlogApp.Services
@@ -13,12 +14,16 @@ namespace BlogApp.Services
         public PostCommentService(IMongoClient mongoClient, IOptions<BlogPostsDatabaseSettings> options)
         {
             _mongoClient = mongoClient;
-            var mongoDatabase = mongoClient.GetDatabase(options.Value.Database);
+            var mongoDatabase = _mongoClient.GetDatabase(options.Value.Database);
             _collection = mongoDatabase.GetCollection<PostComments>(Constants.CollectionNames.PostComments);
         }
 
-        public async Task AddComment(PostComments comment) =>
+        public async Task<PostComments> AddComment(PostComments comment)
+        {
+            // comment.Id = ObjectId.Empty;
             await _collection.InsertOneAsync(comment);
+            return comment;
+        }
 
 
         public async Task<List<PostComments>> GetAllAsync()
@@ -27,23 +32,30 @@ namespace BlogApp.Services
             return await _collection.Find(filter).ToListAsync();
         }
 
-        public async Task<List<PostComments>> GetByPostAsync(int postId)
+        public async Task<List<PostComments>> GetByPostAsync(string postId)
         {
-            var filter = Builders<PostComments>.Filter.Eq(d => d.PostId, postId);
+            // ObjectId.TryParse(postId, out ObjectId objectId);
+            var filter = Builders<PostComments>.Filter.Where(x => x.PostId == postId);
             return await _collection.Find(filter).ToListAsync();
         }
 
-        public async Task<PostComments> GetAsync(int id)
+        public async Task<PostComments> GetAsync(string id)
         {
-            var filter = Builders<PostComments>.Filter.Eq(d => d.Id, id);
+            ObjectId.TryParse(id, out ObjectId objectId);
+            var filter = Builders<PostComments>.Filter.Eq("_id", objectId);
             return await _collection.Find(filter).FirstOrDefaultAsync();
         }
-        public async Task DeleteAsync(int id) =>
-            await _collection.DeleteOneAsync(x => x.Id == id);
-
-        public async Task LikeComment(int id)
+        public async Task DeleteAsync(string id)
         {
-            var filter = Builders<PostComments>.Filter.Eq(d => d.Id, id);
+            ObjectId.TryParse(id, out ObjectId objectId);
+            var filter = Builders<PostComments>.Filter.Eq("_id", objectId);
+            await _collection.DeleteOneAsync(filter);
+        }
+
+        public async Task LikeComment(string id)
+        {
+            ObjectId.TryParse(id, out ObjectId objectId);
+            var filter = Builders<PostComments>.Filter.Eq("_id", objectId);
             var update = Builders<PostComments>.Update.Inc(d => d.Likes, 1);
             await _collection.FindOneAndUpdateAsync(filter, update);
         }

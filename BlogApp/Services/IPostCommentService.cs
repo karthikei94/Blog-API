@@ -4,12 +4,12 @@ namespace BlogApp.Services;
 
 public interface IPostCommentService
 {
-    Task AddComment(PostComments comment);
+    Task<PostComments> AddComment(PostComments comment);
     Task<List<PostComments>> GetAllAsync();
-    Task<List<PostComments>> GetByPostAsync(int postId);
-    Task<PostComments> GetAsync(int id);
-    Task DeleteAsync(int id);
-    Task LikeComment(int id);
+    Task<List<PostComments>> GetByPostAsync(string postId);
+    Task<PostComments> GetAsync(string id);
+    Task DeleteAsync(string id);
+    Task LikeComment(string id);
 
 }
 

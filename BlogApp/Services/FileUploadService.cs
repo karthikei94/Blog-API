@@ -17,7 +17,7 @@ public class FileUploadService : IFileUploadService
         Guid someGuid = Guid.NewGuid();
         using var stream = new MemoryStream();
         await file.CopyToAsync(stream);
-
+        
         var blob = await _storageClient.UploadObjectAsync(_bucketName,
         $"{name}-{someGuid}", file.ContentType, stream);
 

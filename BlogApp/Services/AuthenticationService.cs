@@ -9,6 +9,7 @@ namespace BlogApp.Services
             // var userCred = await firebaseAuthClient.CreateUserWithEmailAndPasswordAsync(email, password);
             // return userCred is null ? null : await userCred.User.GetIdTokenAsync();
             var userArgs = new UserRecordArgs(){
+            
             Email = email,
             Password = password,
             DisplayName = displayName,
