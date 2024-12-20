@@ -13,7 +13,7 @@ public class BlogPost
     public DateTime? PublicationDate { get; set; }
     public bool Draft { get; set; }
     public DateTime CreatedDate { get; set; }
-    public required string CreatedBy { get; set; } = null!;
+    public string CreatedBy { get; set; }
     public int Likes { get; set; }
     public int Views { get; set; }
 }

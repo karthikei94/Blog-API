@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
+using BlogApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson.IO;
@@ -13,6 +14,9 @@ namespace BlogApp.Controllers.v2
     [ApiController]
     public class SampleController : ControllerBase
     {
+        private readonly IMemoryCachingService _memoryCachingService;
+
+        public SampleController(IMemoryCachingService memoryCachingService) => _memoryCachingService = memoryCachingService;
 
         [HttpGet]
         [MapToApiVersion("2.0")]
@@ -56,6 +60,35 @@ namespace BlogApp.Controllers.v2
             string userId = claims.FirstOrDefault(x => x.Type == "user_id").Value;
 
             return userId;
+        }
+
+        [HttpPost("TrialCache")]
+        [MapToApiVersion("2.0")]
+        [AllowAnonymous]
+        public async Task<IActionResult> TrialCache()
+        {
+
+            var result = await _memoryCachingService.GetOrCreateAsync<List<string>>("Users", async () =>
+            {
+                var result = await GetRandom();
+                // await Task.Delay(1000);
+                return result;
+            });
+            return Ok(result);
+        }
+        
+        [NonAction]
+        public async Task<List<string>> GetRandom()
+        {
+            Random rd = new Random();
+            var list = new List<string>();
+            for (var i = 0; i < 10; i++)
+            {
+                await Task.Delay(100);
+                var trail = rd.Next(1, 98);
+                list.Add(trail.ToString());
+            }
+            return list;
         }
     }
     [Serializable, JsonObject]
