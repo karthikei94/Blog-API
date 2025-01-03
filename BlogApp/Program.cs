@@ -17,8 +17,13 @@ using BlogApp.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
 // Add services to the container.
 var credPath = builder.Configuration.GetValue<string>("FirebaseCredentialsPath");
+Console.WriteLine($"GOOGLE cred file Setting: {credPath}");
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credPath);
 
 builder.Services.AddSingleton(FirebaseApp.Create(new AppOptions()
@@ -37,7 +42,7 @@ builder.Services.AddScoped(typeof(IMongoClient), _ =>
 });
 builder.Services.AddScoped<IBlogPostService, BlogPostService>();
 builder.Services.AddScoped<IPostCommentService, PostCommentService>();
-builder.Services.AddScoped<IUserService,UserService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddSingleton<IFileUploadService>(provider => new FileUploadService(StorageClient.Create(), provider.GetRequiredService<IConfiguration>()));
 // builder.Services.AddSingleton(_ => new FirestoreProvider(
@@ -66,9 +71,10 @@ builder.Services.AddSingleton<IFileUploadService>(provider => new FileUploadServ
 //                 // IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your_secret_key"))
 //             };
 //         });
-        
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddScheme<AuthenticationSchemeOptions,FirebaseAuthenticationHandler>(JwtBearerDefaults.AuthenticationScheme, (action) => {
+        .AddScheme<AuthenticationSchemeOptions, FirebaseAuthenticationHandler>(JwtBearerDefaults.AuthenticationScheme, (action) =>
+        {
         });
 
 // var key = System.Text.Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Firebase:Key")!);
@@ -110,6 +116,29 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Blog-API-V1", Contact = new OpenApiContact() { Name = "Karthikeya", Email = "mangalpally.10705417@ltimindtree.com" }, Version = "v1.0" });
     c.SwaggerDoc("v2", new OpenApiInfo { Title = "Blog-API-V2", Contact = new OpenApiContact() { Name = "Karthikeya", Email = "mangalpally.10705417@ltimindtree.com" }, Version = "v2.0" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "bearer"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type=ReferenceType.SecurityScheme,
+                    Id="Bearer"
+                }
+            },
+            new string[]{}
+        }
+    });
 });
 builder.Services.AddCors(options => options.AddDefaultPolicy(t => t.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()));
 
@@ -118,13 +147,13 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blog API - V1");
-        c.SwaggerEndpoint("/swagger/v2/swagger.json", "Blog API - V2");
-    });
 }
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Blog API - V1");
+    c.SwaggerEndpoint("/swagger/v2/swagger.json", "Blog API - V2");
+});
 
 // app.UseHttpsRedirection();
 
