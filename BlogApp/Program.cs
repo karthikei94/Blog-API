@@ -24,10 +24,14 @@ var builder = WebApplication.CreateBuilder(args);
 var credPath = builder.Configuration.GetValue<string>("FirebaseCredentialsPath");
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credPath);
 
-builder.Services.AddSingleton(FirebaseApp.Create(new AppOptions()
+var credential = new AppOptions()
 {
     Credential = GoogleCredential.FromFile(credPath),
-})
+};
+builder.Services.AddSingleton(FirebaseApp.Create(credential));
+builder.Services.AddSingleton(StorageClient.Create(GoogleCredential.FromFile(credPath)));
+builder.Services.AddScoped(typeof(BlobServiceClient),
+_ => new BlobServiceClient(builder.Configuration.GetValue<string>("AzureStorage:ConnectionString"))
 );
 
 // builder.Services.AddSingleton<IFirebaseAuthClient,FirebaseAuthClient>();
@@ -44,9 +48,11 @@ builder.Services.AddSingleton<IMemoryCachingService, MemoryCachingService>();
 builder.Services.AddScoped<IFileUploadRepository, FileUploadRepository>();
 builder.Services.AddScoped<IBlogPostService, BlogPostService>();
 builder.Services.AddScoped<IPostCommentService, PostCommentService>();
-builder.Services.AddScoped<IUserService,UserService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IFileUploadService, FileUploadService>();
 
-builder.Services.AddSingleton<IFileUploadService>(provider => new FileUploadService(StorageClient.Create(), provider.GetRequiredService<IConfiguration>()));
+// builder.Services.AddSingleton<IFileUploadService>(provider => 
+// new FileUploadService(StorageClient.Create(), provider.GetRequiredService<IConfiguration>()));
 // builder.Services.AddSingleton(_ => new FirestoreProvider(
 //     new FirestoreDbBuilder 
 //     { 
@@ -73,9 +79,10 @@ builder.Services.AddSingleton<IFileUploadService>(provider => new FileUploadServ
 //                 // IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("your_secret_key"))
 //             };
 //         });
-        
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddScheme<AuthenticationSchemeOptions,FirebaseAuthenticationHandler>(JwtBearerDefaults.AuthenticationScheme, (action) => {
+        .AddScheme<AuthenticationSchemeOptions, FirebaseAuthenticationHandler>(JwtBearerDefaults.AuthenticationScheme, (action) =>
+        {
         });
 
 // var key = System.Text.Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Firebase:Key")!);

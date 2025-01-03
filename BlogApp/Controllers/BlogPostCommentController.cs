@@ -32,6 +32,10 @@ public class BlogPostCommentController(IPostCommentService commentService) : Con
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Post(PostComments comment)
     {
+        var userId = HttpContext.User.Claims.FirstOrDefault(x => x.Type == "user_id");
+        if(userId is null)
+            return Unauthorized("Please login for this functionality");
+        comment.CreatedBy = userId.Value;
         var result = await commentService.AddComment(comment);
         return Ok(result);
     }
