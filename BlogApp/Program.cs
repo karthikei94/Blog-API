@@ -14,6 +14,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using BlogApp.Authentication;
+using BlogApp.Repository;
+using Azure.Storage.Blobs;
+using Microsoft.Extensions.Caching.Memory;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,10 +29,14 @@ var credPath = builder.Configuration.GetValue<string>("FirebaseCredentialsPath")
 Console.WriteLine($"GOOGLE cred file Setting: {credPath}");
 Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credPath);
 
-builder.Services.AddSingleton(FirebaseApp.Create(new AppOptions()
+var credential = new AppOptions()
 {
     Credential = GoogleCredential.FromFile(credPath),
-})
+};
+builder.Services.AddSingleton(FirebaseApp.Create(credential));
+builder.Services.AddSingleton(StorageClient.Create(GoogleCredential.FromFile(credPath)));
+builder.Services.AddScoped(typeof(BlobServiceClient),
+_ => new BlobServiceClient(builder.Configuration.GetValue<string>("AzureStorage:ConnectionString"))
 );
 
 // builder.Services.AddSingleton<IFirebaseAuthClient,FirebaseAuthClient>();
@@ -40,11 +47,17 @@ builder.Services.AddScoped(typeof(IMongoClient), _ =>
 {
     return new MongoClient(builder.Configuration.GetValue<string>("BlogPostsDatabase:ConnectionString"));
 });
+
+builder.Services.AddSingleton<IMemoryCache, MemoryCache>();
+builder.Services.AddSingleton<IMemoryCachingService, MemoryCachingService>();
+builder.Services.AddScoped<IFileUploadRepository, FileUploadRepository>();
 builder.Services.AddScoped<IBlogPostService, BlogPostService>();
 builder.Services.AddScoped<IPostCommentService, PostCommentService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IFileUploadService, FileUploadService>();
 
-builder.Services.AddSingleton<IFileUploadService>(provider => new FileUploadService(StorageClient.Create(), provider.GetRequiredService<IConfiguration>()));
+// builder.Services.AddSingleton<IFileUploadService>(provider => 
+// new FileUploadService(StorageClient.Create(), provider.GetRequiredService<IConfiguration>()));
 // builder.Services.AddSingleton(_ => new FirestoreProvider(
 //     new FirestoreDbBuilder 
 //     { 
@@ -98,7 +111,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddApiVersioning(options =>
 {
-    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.DefaultApiVersion = new ApiVersion(2, 0);
     options.AssumeDefaultVersionWhenUnspecified = true;
     options.ReportApiVersions = true;
     options.ApiVersionReader = ApiVersionReader.Combine(
@@ -162,6 +175,7 @@ app.UseAuthentication();
 // app.UseJwtAuthentication()
 app.UseAuthorization();
 app.UseCors();
+// app.UseMiddleware<CustomMiddleware>();
 
 app.MapControllers();
 

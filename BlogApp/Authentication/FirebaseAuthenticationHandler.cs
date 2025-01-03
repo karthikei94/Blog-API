@@ -29,11 +29,11 @@ public class FirebaseAuthenticationHandler : AuthenticationHandler<Authenticatio
     {
         // this.Request.Headers.
         if (!Context.Request.Headers.ContainsKey("Authorization"))
-            return Microsoft.AspNetCore.Authentication.AuthenticateResult.NoResult();
+            return Microsoft.AspNetCore.Authentication.AuthenticateResult.Fail("Bearer token required");
 
         var bearerToken = Context.Request.Headers["Authorization"];
         if (bearerToken == StringValues.Empty || !bearerToken[0].Contains("Bearer"))
-            return Microsoft.AspNetCore.Authentication.AuthenticateResult.Fail("Invalid Auth Scheme");
+            return Microsoft.AspNetCore.Authentication.AuthenticateResult.Fail("Invalid token");
 
         string token = bearerToken.ToString().Substring("Bearer ".Length);
 

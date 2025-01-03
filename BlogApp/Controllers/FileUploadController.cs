@@ -10,9 +10,10 @@ public class FileUploadController(IFileUploadService fileUploadService) : Contro
     [HttpPost]
     [MapToApiVersion("2.0")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<Uri> UploadFile(IFormFile file)
+    public async Task<IActionResult> UploadFile(IFormFile file)
     {
-        var result = await fileUploadService.UploadFile(file.FileName, file);
-        return result;
+        var userId = HttpContext.User.Claims.FirstOrDefault(x => x.Type == "user_id")?.Value;
+        var result = await fileUploadService.UploadFile(file, userId);
+        return Ok(result);
     }
 }

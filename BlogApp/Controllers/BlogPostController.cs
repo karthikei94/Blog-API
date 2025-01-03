@@ -56,6 +56,7 @@ public class BlogPostController(IBlogPostService blogPostService) : ControllerBa
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Put(string id, BlogPost blogPost)
     {
+        var userId = HttpContext.User.Claims.FirstOrDefault(x => x.Type == "user_id")?.Value;
         await blogPostService.UpdateAsync(id, blogPost);
         return Ok();
     }
