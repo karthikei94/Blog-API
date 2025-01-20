@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  blog-app:
+    image: blog-app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    # volumes:
+    #   - .:/app
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - FirebaseCredentialsPath=blog-app-443412-865e5f019c99.json
+    # depends_on:
+    #   - db
+
+  # db:
+  #   image: mcr.microsoft.com/mssql/server:2019-latest
+  #   environment:
+  #     SA_PASSWORD: "YourStrong@Passw0rd"
+  #     ACCEPT_EULA: "Y"
+  #   ports:
+  #     - "1433:1433"
+  #   volumes:
+  #     - ./data:/var/opt/mssql/data
