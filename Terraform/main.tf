@@ -4,11 +4,23 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "4.14.0"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "2.4.1" # Helm provider version
+    }
   }
 
   #   required_version = ">= 1.1.0"
 }
 
+provider "helm" {
+  kubernetes {
+    host                   = azurerm_kubernetes_cluster.aks.kube_config.0.host
+    client_certificate     = base64decode(azurerm_kubernetes_cluster.aks.kube_config.0.client_certificate)
+    client_key             = base64decode(azurerm_kubernetes_cluster.aks.kube_config.0.client_key)
+    cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.aks.kube_config.0.cluster_ca_certificate)
+  }
+}
 
 provider "azurerm" {
   features {}
@@ -32,6 +44,10 @@ resource "azurerm_subnet" "subnet" {
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.240.0.0/16"]
+}
+
+provider "kubernetes" {
+  config_path = "C:/Users/karthikeya/.kube/config"
 }
 
 resource "azurerm_kubernetes_cluster" "aks" {
@@ -62,19 +78,60 @@ resource "azurerm_kubernetes_cluster" "aks" {
   tags = {
     environment = "development"
   }
+
+  lifecycle {
+    ignore_changes = [
+      # upgrade_settings,
+    ]
+  }
 }
 
-resource "azurerm_kubernetes_cluster_node_pool" "spot_pool" {
-  name                  = "spotpool"
+# resource "azurerm_kubernetes_cluster_node_pool" "spot_pool" {
+#   name                  = "spotpool"
+#   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
+#   vm_size               = "Standard_B2s"
+#   node_count            = 1
+#   priority              = "Spot"
+# }
+
+resource "azurerm_kubernetes_cluster_node_pool" "linux_pool" {
+  name                  = "linuxpool"
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
   vm_size               = "Standard_B2s"
   node_count            = 1
-  priority              = "Spot"
+  os_type               = "Linux"
+  mode                  = "User"
+  vnet_subnet_id        = azurerm_subnet.subnet.id
+
+  lifecycle {
+    ignore_changes = [
+      // List the attributes to ignore changes
+      node_count,
+      // Add other attributes if necessary
+    ]
+  }
 }
 
 # Adding Helm Configuration
+# provider "helm" {
+#   kubernetes {
+#     # config_path = "~/.kube/config"
+#     config_path = "C:/Users/karthikeya/.kube/config"
+#   }
+# }
+
+# provider "kubernetes" {
+#   alias                  = "alias_name"
+#   host                   = azurerm_kubernetes_cluster.aks.kube_config.0.host
+#   client_certificate     = base64decode(azurerm_kubernetes_cluster.aks.kube_config.0.client_certificate)
+#   client_key             = base64decode(azurerm_kubernetes_cluster.aks.kube_config.0.client_key)
+#   cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.aks.kube_config.0.cluster_ca_certificate)
+# }
+
+
 
 resource "helm_release" "blog_app_api" {
+  # provider  = kubernetes.alias_name
   name      = "blog-app-api"
   chart     = "../Helm/blog-app-api"
   namespace = "default"

@@ -17,6 +17,7 @@ using BlogApp.Authentication;
 using BlogApp.Repository;
 using Azure.Storage.Blobs;
 using Microsoft.Extensions.Caching.Memory;
+using BlogApp.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -153,9 +154,17 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
 builder.Services.AddCors(options => options.AddDefaultPolicy(t => t.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()));
 
 var app = builder.Build();
+
+
+//app.Use((req, next) =>
+//{
+//    req.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+//    return next();
+//});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -88,6 +88,7 @@ npm-debug.log
 # Local .terraform directories
 **/.terraform/*
 Terraform/.terraform/*
+Terraform/.terraform/**
 # .tfstate files
 Terraform/*.tfstate
 Terraform/*.tfstate.*
@@ -122,3 +123,5 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+Terraform/.terraform/providers/registry.terraform.io/hashicorp/azurerm/4.14.0/windows_amd64/LICENSE.txt
+Terraform/.terraform/providers/registry.terraform.io/hashicorp/helm/2.17.0/windows_amd64/LICENSE.txt
