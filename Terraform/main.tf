@@ -13,14 +13,7 @@ terraform {
   #   required_version = ">= 1.1.0"
 }
 
-provider "helm" {
-  kubernetes {
-    host                   = azurerm_kubernetes_cluster.aks.kube_config.0.host
-    client_certificate     = base64decode(azurerm_kubernetes_cluster.aks.kube_config.0.client_certificate)
-    client_key             = base64decode(azurerm_kubernetes_cluster.aks.kube_config.0.client_key)
-    cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.aks.kube_config.0.cluster_ca_certificate)
-  }
-}
+
 
 provider "azurerm" {
   features {}
@@ -46,6 +39,20 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = ["10.240.0.0/16"]
 }
 
+resource "azurerm_container_registry" "acr" {
+  name                = "blogappacr"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  sku                 = "Standard"
+  admin_enabled       = true
+}
+
+resource "azurerm_role_assignment" "acr_pull" {
+  principal_id         = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
+  role_definition_name = "AcrPull"
+  scope                = azurerm_container_registry.acr.id
+}
+
 provider "kubernetes" {
   config_path = "C:/Users/karthikeya/.kube/config"
 }
@@ -61,6 +68,12 @@ resource "azurerm_kubernetes_cluster" "aks" {
     node_count     = 1
     vm_size        = "Standard_B2s" # Small instance for low cost
     vnet_subnet_id = azurerm_subnet.subnet.id
+    
+    upgrade_settings {
+      max_surge                     = "33%"
+      drain_timeout_in_minutes      = 30
+      node_soak_duration_in_minutes = 0
+    }
   }
 
   identity {
@@ -128,7 +141,14 @@ resource "azurerm_kubernetes_cluster_node_pool" "linux_pool" {
 #   cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.aks.kube_config.0.cluster_ca_certificate)
 # }
 
-
+provider "helm" {
+  kubernetes {
+    host                   = azurerm_kubernetes_cluster.aks.kube_config.0.host
+    client_certificate     = base64decode(azurerm_kubernetes_cluster.aks.kube_config.0.client_certificate)
+    client_key             = base64decode(azurerm_kubernetes_cluster.aks.kube_config.0.client_key)
+    cluster_ca_certificate = base64decode(azurerm_kubernetes_cluster.aks.kube_config.0.cluster_ca_certificate)
+  }
+}
 
 resource "helm_release" "blog_app_api" {
   # provider  = kubernetes.alias_name

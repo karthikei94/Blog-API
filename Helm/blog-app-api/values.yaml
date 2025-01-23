@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: blog-app-api
+  repository: blogappacr.azurecr.io/blog-app-api
   tag: latest
   pullPolicy: IfNotPresent
 
