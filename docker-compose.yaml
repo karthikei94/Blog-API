@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   blog-app:
-    image: blog-app:latest
+    image: blog-app-api:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -13,7 +13,6 @@ services:
     #   - .:/app
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - FirebaseCredentialsPath=blog-app-443412-865e5f019c99.json
     # depends_on:
     #   - db
 

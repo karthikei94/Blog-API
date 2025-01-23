@@ -150,21 +150,51 @@ provider "helm" {
   }
 }
 
+# data "azurerm_container_registry" "acr" {
+#   name                = azurerm_container_registry.acr.name
+#   resource_group_name = azurerm_resource_group.rg.name
+# }
+
+# data "azurerm_container_registry_token" "acr_token" {
+#   name                  = "acr-token"
+#   container_registry_name = azurerm_container_registry.acr.name
+#   resource_group_name   = azurerm_resource_group.rg.name
+# }
+
+# output "acr_username" {
+#   value = data.azurerm_container_registry_token.acr_token.username
+# }
+
+# output "acr_password" {
+#   value = data.azurerm_container_registry_token.acr_token.password
+# }
+
 resource "helm_release" "blog_app_api" {
   # provider  = kubernetes.alias_name
   name      = "blog-app-api"
-  chart     = "../Helm/blog-app-api"
-  namespace = "default"
+  chart      = "../Helm/blog-app-api"
+  # version    = "0.1.0"  # Specify the version of the Helm chart
+  namespace  = "default"
+  repository = "https://${var.acr_name}.azurecr.io"
+  repository_username = var.acr_user_name
+  repository_password = var.acr_user_password
+  # repository = "https://${data.azurerm_container_registry.acr.login_server}/helm/v1/repo"
+  # repository_username = data.azurerm_container_registry_token.acr_token.username
+  # repository_password = data.azurerm_container_registry_token.acr_token.password
+  # repository  = "https://${var.acr_name}.azurecr.io/helm/v1/repo"
+  # repository_username = var.acr_user_name
+  # repository_password = var.acr_user_password
 
   set {
     name  = "image.repository"
-    value = "blog-app-api"
+    value = "blogappacr.azurecr.io/blog-app-api"
   }
 
   set {
     name  = "image.tag"
     value = "latest"
   }
+
 }
 
 # Adding ingress controller configuration
